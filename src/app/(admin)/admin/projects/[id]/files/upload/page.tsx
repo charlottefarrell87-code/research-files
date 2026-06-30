@@ -153,16 +153,20 @@ export default function UploadFilePage() {
           {mode === 'html_upload' ? (
             <div>
               <label className="label">HTML file <span className="text-red-500">*</span></label>
-              <div className={`mt-1 flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
+              <label className={`mt-1 flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer ${
                 file ? 'border-brand-300 bg-brand-50' : 'border-zinc-200 hover:border-zinc-300 bg-zinc-50'
               }`}>
+                <input
+                  type="file"
+                  accept=".html,.htm"
+                  onChange={e => setFile(e.target.files?.[0] ?? null)}
+                  className="sr-only"
+                />
                 {file ? (
                   <div>
                     <p className="text-sm font-medium text-brand-700">{file.name}</p>
                     <p className="text-xs text-zinc-400 mt-1">{(file.size / 1024).toFixed(1)} KB</p>
-                    <button type="button" onClick={() => setFile(null)} className="mt-3 text-xs text-zinc-400 hover:text-zinc-600">
-                      Remove
-                    </button>
+                    <span className="mt-3 text-xs text-zinc-400 hover:text-zinc-600 block">Click to change</span>
                   </div>
                 ) : (
                   <>
@@ -171,16 +175,9 @@ export default function UploadFilePage() {
                         d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
                     <p className="text-sm text-zinc-500">Drop an HTML file here, or click to browse</p>
-                    <input
-                      type="file"
-                      accept=".html,.htm"
-                      onChange={e => setFile(e.target.files?.[0] ?? null)}
-                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                      style={{ position: 'relative' }}
-                    />
                   </>
                 )}
-              </div>
+              </label>
             </div>
           ) : (
             <div>
