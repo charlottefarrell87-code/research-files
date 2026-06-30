@@ -27,12 +27,16 @@ export default async function FileViewerPage({ params }: PageProps) {
   if (!file) notFound()
 
   let fileUrl: string | null = null
+  let htmlContent: string | null = null
 
   if (file.file_type === 'html_upload' && file.storage_path) {
+    // Download and pass as srcdoc to avoid content-type issues with signed URLs
     const { data } = await supabase.storage
       .from('research-files')
-      .createSignedUrl(file.storage_path, 3600)
-    fileUrl = data?.signedUrl ?? null
+      .download(file.storage_path)
+    if (data) {
+      htmlContent = await data.text()
+    }
   } else if (file.file_type === 'external_link') {
     fileUrl = file.external_url
   }
@@ -79,7 +83,14 @@ export default async function FileViewerPage({ params }: PageProps) {
       </div>
 
       {/* Content */}
-      {fileUrl ? (
+      {htmlContent ? (
+        <iframe
+          srcDoc={htmlContent}
+          className="flex-1 w-full border-0"
+          title={file.name}
+          sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+        />
+      ) : fileUrl ? (
         <iframe
           src={fileUrl}
           className="flex-1 w-full border-0"
