@@ -1,16 +1,18 @@
 'use client'
 import { useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { ResearchFile } from '@/types'
 import { formatDateTime } from '@/lib/utils'
 
 interface FileListProps {
   files: ResearchFile[]
+  projectId: string
   isAdmin?: boolean
   onDeleted?: (id: string) => void
 }
 
-export default function FileList({ files: initialFiles, isAdmin, onDeleted }: FileListProps) {
+export default function FileList({ files: initialFiles, projectId, isAdmin, onDeleted }: FileListProps) {
   const [files, setFiles] = useState(initialFiles)
 
   async function handleDelete(file: ResearchFile) {
@@ -22,14 +24,6 @@ export default function FileList({ files: initialFiles, isAdmin, onDeleted }: Fi
     await supabase.from('research_files').delete().eq('id', file.id)
     setFiles(prev => prev.filter(f => f.id !== file.id))
     onDeleted?.(file.id)
-  }
-
-  async function getFileUrl(storagePath: string) {
-    const supabase = createClient()
-    const { data } = await supabase.storage
-      .from('research-files')
-      .createSignedUrl(storagePath, 3600)
-    if (data?.signedUrl) window.open(data.signedUrl, '_blank')
   }
 
   if (files.length === 0) {
@@ -67,24 +61,12 @@ export default function FileList({ files: initialFiles, isAdmin, onDeleted }: Fi
           </div>
 
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            {file.file_type === 'html_upload' && file.storage_path && (
-              <button
-                onClick={() => getFileUrl(file.storage_path!)}
-                className="btn-ghost text-xs py-1 px-2"
-              >
-                Open
-              </button>
-            )}
-            {file.file_type === 'external_link' && file.external_url && (
-              <a
-                href={file.external_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-ghost text-xs py-1 px-2"
-              >
-                Open
-              </a>
-            )}
+            <Link
+              href={`/projects/${projectId}/file/${file.id}`}
+              className="btn-ghost text-xs py-1 px-2"
+            >
+              Open
+            </Link>
             {isAdmin && (
               <button
                 onClick={() => handleDelete(file)}

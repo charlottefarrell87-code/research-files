@@ -76,7 +76,7 @@ export default async function SubProjectPage({ params }: PageProps) {
               </Link>
             )}
           </div>
-          <FileList files={files ?? []} isAdmin={isAdmin} />
+          <FileList files={files ?? []} projectId={id} isAdmin={isAdmin} />
         </section>
 
         {/* Comments */}
