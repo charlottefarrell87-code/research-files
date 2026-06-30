@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 import Sidebar from '@/components/layout/Sidebar'
 import { Profile } from '@/types'
 
@@ -9,7 +10,11 @@ export default async function AuthenticatedLayout({ children }: { children: Reac
 
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
+  const service = createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  const { data: profile } = await service
     .from('profiles')
     .select('*')
     .eq('id', user.id)
