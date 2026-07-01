@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { friendlyError } from '@/lib/errors'
 
 export default function AccountPage() {
   const [currentPassword, setCurrentPassword] = useState('')
@@ -50,7 +51,7 @@ export default function AccountPage() {
 
     if (error) {
       setStatus('error')
-      setMessage(error.message)
+      setMessage(friendlyError(error.message))
     } else {
       setStatus('success')
       setMessage('Password updated successfully.')

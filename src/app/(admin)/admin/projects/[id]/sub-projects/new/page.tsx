@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { friendlyError } from '@/lib/errors'
 
 export default function NewSubProjectPage() {
   const router = useRouter()
@@ -34,7 +35,7 @@ export default function NewSubProjectPage() {
       description: description.trim() || null,
       created_by: user?.id,
     })
-    if (error) { setError(error.message); setSaving(false); return }
+    if (error) { setError(friendlyError(error.message)); setSaving(false); return }
     router.push(`/projects/${projectId}`)
   }
 

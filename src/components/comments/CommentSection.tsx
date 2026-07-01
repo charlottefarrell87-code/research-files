@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Comment, Profile } from '@/types'
 import { formatDateTime, getInitials } from '@/lib/utils'
+import { friendlyError } from '@/lib/errors'
 
 interface CommentSectionProps {
   comments: (Comment & { author: Pick<Profile, 'full_name' | 'email'> | null })[]
@@ -24,13 +25,16 @@ export default function CommentSection({
   const [comments, setComments] = useState(initialComments)
   const [body, setBody] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editBody, setEditBody] = useState('')
+  const [editError, setEditError] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!body.trim()) return
     setSubmitting(true)
+    setSubmitError(null)
     const supabase = createClient()
     const { data, error } = await supabase
       .from('comments')
@@ -43,7 +47,9 @@ export default function CommentSection({
       .select('*, author:profiles(full_name,email)')
       .single()
 
-    if (!error && data) {
+    if (error) {
+      setSubmitError(friendlyError(error.message))
+    } else if (data) {
       setComments(prev => [...prev, data as Comment & { author: Pick<Profile,'full_name'|'email'> | null }])
       setBody('')
     }
@@ -57,17 +63,20 @@ export default function CommentSection({
   }
 
   async function handleEdit(id: string) {
+    setEditError(null)
     const supabase = createClient()
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('comments')
       .update({ body: editBody.trim() })
       .eq('id', id)
       .select('*, author:profiles(full_name,email)')
       .single()
-    if (data) {
+    if (error) {
+      setEditError(friendlyError(error.message))
+    } else if (data) {
       setComments(prev => prev.map(c => c.id === id ? data as Comment & { author: Pick<Profile,'full_name'|'email'> | null } : c))
+      setEditingId(null)
     }
-    setEditingId(null)
   }
 
   return (
@@ -104,9 +113,12 @@ export default function CommentSection({
                       value={editBody}
                       onChange={e => setEditBody(e.target.value)}
                     />
+                    {editError && (
+                      <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{editError}</p>
+                    )}
                     <div className="flex gap-2">
                       <button onClick={() => handleEdit(c.id)} className="btn-primary text-xs py-1 px-3">Save</button>
-                      <button onClick={() => setEditingId(null)} className="btn-secondary text-xs py-1 px-3">Cancel</button>
+                      <button onClick={() => { setEditingId(null); setEditError(null) }} className="btn-secondary text-xs py-1 px-3">Cancel</button>
                     </div>
                   </div>
                 ) : (
@@ -132,6 +144,9 @@ export default function CommentSection({
         })}
       </div>
 
+      {submitError && (
+        <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-3">{submitError}</p>
+      )}
       <form onSubmit={handleSubmit} className="flex gap-3">
         <textarea
           className="input text-sm resize-none flex-1"

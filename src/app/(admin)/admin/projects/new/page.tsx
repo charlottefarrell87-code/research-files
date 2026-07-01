@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { PROJECT_COLORS } from '@/lib/utils'
+import { friendlyError } from '@/lib/errors'
 
 export default function NewProjectPage() {
   const router = useRouter()
@@ -25,7 +26,7 @@ export default function NewProjectPage() {
       .insert({ name: name.trim(), description: description.trim() || null, color, created_by: user?.id })
       .select('id')
       .single()
-    if (error) { setError(error.message); setSaving(false); return }
+    if (error) { setError(friendlyError(error.message)); setSaving(false); return }
     router.push(`/projects/${data.id}`)
   }
 

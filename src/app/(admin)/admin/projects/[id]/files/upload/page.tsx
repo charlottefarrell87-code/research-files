@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { friendlyError } from '@/lib/errors'
 
 type UploadMode = 'html_upload' | 'external_link'
 
@@ -55,7 +56,7 @@ export default function UploadFilePage() {
         .from('research-files')
         .upload(path, file, { contentType: file.type })
       if (uploadError) {
-        setError(uploadError.message)
+        setError(friendlyError(uploadError.message))
         setUploading(false)
         return
       }
@@ -74,7 +75,7 @@ export default function UploadFilePage() {
     })
 
     if (insertError) {
-      setError(insertError.message)
+      setError(friendlyError(insertError.message))
       setUploading(false)
       return
     }

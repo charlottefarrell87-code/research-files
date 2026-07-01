@@ -4,6 +4,7 @@ import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { PROJECT_COLORS } from '@/lib/utils'
+import { friendlyError } from '@/lib/errors'
 
 export default function EditProjectPage() {
   const router = useRouter()
@@ -40,7 +41,7 @@ export default function EditProjectPage() {
       .from('projects')
       .update({ name: name.trim(), description: description.trim() || null, color })
       .eq('id', id)
-    if (error) { setError(error.message); setSaving(false); return }
+    if (error) { setError(friendlyError(error.message)); setSaving(false); return }
     router.push(`/projects/${id}`)
   }
 
