@@ -49,7 +49,8 @@ export default function UploadFilePage() {
 
     if (mode === 'html_upload' && file) {
       const ext = file.name.split('.').pop()
-      const path = `${projectId}/${subProjectId ?? 'root'}/${Date.now()}-${name.trim().replace(/\s+/g, '-')}.${ext}`
+      const safeName = name.trim().replace(/[^a-zA-Z0-9._-]/g, '-').replace(/-+/g, '-')
+      const path = `${projectId}/${subProjectId ?? 'root'}/${Date.now()}-${safeName}.${ext}`
       const { error: uploadError } = await supabase.storage
         .from('research-files')
         .upload(path, file, { contentType: file.type })
