@@ -34,11 +34,9 @@ export default function NotificationBar({
     setVisible(false)
   }
 
-  if (!visible) return null
+  if (!visible || !projectId) return null
 
-  const href = subProjectId
-    ? `/projects/${projectId}/file/${fileId}`
-    : `/projects/${projectId}/file/${fileId}`
+  const href = `/projects/${projectId}/file/${fileId}`
 
   const daysAgo = Math.floor(
     (Date.now() - new Date(uploadedAt).getTime()) / (1000 * 60 * 60 * 24)

@@ -30,8 +30,8 @@ export default async function FileViewerPage({ params }: PageProps) {
   let htmlContent: string | null = null
 
   if (file.file_type === 'html_upload' && file.storage_path) {
-    // Download and pass as srcdoc to avoid content-type issues with signed URLs
-    const { data } = await supabase.storage
+    // Use service role for download so RLS never blocks it
+    const { data } = await service.storage
       .from('research-files')
       .download(file.storage_path)
     if (data) {

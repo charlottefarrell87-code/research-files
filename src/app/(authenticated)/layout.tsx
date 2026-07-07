@@ -11,6 +11,7 @@ async function getLatestFile(service: any) {
     .from('research_files')
     .select('id, name, project_id, sub_project_id, created_at, project:projects(name)')
     .gte('created_at', weekAgo)
+    .not('project_id', 'is', null)
     .order('created_at', { ascending: false })
     .limit(1)
     .single()
