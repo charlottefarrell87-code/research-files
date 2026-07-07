@@ -7,11 +7,15 @@ interface PageProps {
   params: Promise<{ id: string; fileId: string }>
 }
 
+type ViewMode = 'html' | 'pdf' | 'office' | 'external' | null
+
+const OFFICE_EXTS = ['doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx']
+
 export default async function FileViewerPage({ params }: PageProps) {
   const { id, fileId } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  // Auth check handled by layout — guests allowed if guest_access_enabled
+  // Auth handled by layout — guests allowed when guest_access_enabled
 
   const service = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -28,16 +32,43 @@ export default async function FileViewerPage({ params }: PageProps) {
 
   let fileUrl: string | null = null
   let htmlContent: string | null = null
+  let viewMode: ViewMode = null
 
   if (file.file_type === 'html_upload' && file.storage_path) {
-    // Use service role for download so RLS never blocks it
-    const { data } = await service.storage
-      .from('research-files')
-      .download(file.storage_path)
-    if (data) {
-      htmlContent = await data.text()
+    const ext = file.storage_path.split('.').pop()?.toLowerCase() ?? ''
+
+    if (!ext || ext === 'html' || ext === 'htm') {
+      viewMode = 'html'
+      const { data } = await service.storage
+        .from('research-files')
+        .download(file.storage_path)
+      if (data) {
+        let content = await data.text()
+        // Force all links to open in a new tab
+        if (/<head/i.test(content)) {
+          content = content.replace(/(<head[^>]*>)/i, '$1<base target="_blank">')
+        } else {
+          content = '<base target="_blank">' + content
+        }
+        htmlContent = content
+      }
+    } else if (ext === 'pdf') {
+      viewMode = 'pdf'
+      const { data } = await service.storage
+        .from('research-files')
+        .createSignedUrl(file.storage_path, 3600)
+      fileUrl = data?.signedUrl ?? null
+    } else if (OFFICE_EXTS.includes(ext)) {
+      viewMode = 'office'
+      const { data } = await service.storage
+        .from('research-files')
+        .createSignedUrl(file.storage_path, 3600)
+      if (data?.signedUrl) {
+        fileUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(data.signedUrl)}`
+      }
     }
   } else if (file.file_type === 'external_link') {
+    viewMode = 'external'
     fileUrl = file.external_url
   }
 
@@ -70,7 +101,7 @@ export default async function FileViewerPage({ params }: PageProps) {
           <span className="text-zinc-300 text-xs">/</span>
           <span className="text-sm font-medium text-zinc-900 truncate">{file.name}</span>
         </div>
-        {fileUrl && file.file_type === 'external_link' && (
+        {viewMode === 'external' && fileUrl && (
           <a
             href={fileUrl}
             target="_blank"
@@ -80,22 +111,24 @@ export default async function FileViewerPage({ params }: PageProps) {
             Open in new tab ↗
           </a>
         )}
+        {viewMode === 'office' && (
+          <span className="ml-auto text-xs text-zinc-400 shrink-0">Powered by Microsoft Office Online</span>
+        )}
       </div>
 
       {/* Content */}
-      {htmlContent ? (
+      {viewMode === 'html' && htmlContent ? (
         <iframe
           srcDoc={htmlContent}
           className="flex-1 w-full border-0"
           title={file.name}
-          sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+          sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-popups-to-escape-sandbox"
         />
-      ) : fileUrl ? (
+      ) : (viewMode === 'pdf' || viewMode === 'office' || viewMode === 'external') && fileUrl ? (
         <iframe
           src={fileUrl}
           className="flex-1 w-full border-0"
           title={file.name}
-          sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
         />
       ) : (
         <div className="flex-1 flex items-center justify-center text-zinc-400 text-sm">

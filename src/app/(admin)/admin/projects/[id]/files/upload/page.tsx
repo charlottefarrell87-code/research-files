@@ -107,7 +107,7 @@ export default function UploadFilePage() {
       <div className="page-header">
         <h1>Add research file</h1>
         <p className="mt-1 text-sm text-zinc-500">
-          Upload an HTML report or link to an external resource.
+          Upload a research file (HTML, PDF, Word, PowerPoint, Excel) or link to an external resource.
         </p>
       </div>
 
@@ -123,7 +123,7 @@ export default function UploadFilePage() {
                 mode === m ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'
               }`}
             >
-              {m === 'html_upload' ? 'Upload HTML file' : 'External link'}
+              {m === 'html_upload' ? 'Upload file' : 'External link'}
             </button>
           ))}
         </div>
@@ -154,13 +154,14 @@ export default function UploadFilePage() {
 
           {mode === 'html_upload' ? (
             <div>
-              <label className="label">HTML file <span className="text-red-500">*</span></label>
+              <label className="label">File <span className="text-red-500">*</span></label>
+              <p className="text-xs text-zinc-400 mb-2">Supported: HTML, PDF, Word (.doc/.docx), PowerPoint (.ppt/.pptx), Excel (.xls/.xlsx)</p>
               <label className={`mt-1 flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer ${
                 file ? 'border-brand-300 bg-brand-50' : 'border-zinc-200 hover:border-zinc-300 bg-zinc-50'
               }`}>
                 <input
                   type="file"
-                  accept=".html,.htm"
+                  accept=".html,.htm,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx"
                   onChange={e => setFile(e.target.files?.[0] ?? null)}
                   className="sr-only"
                 />
@@ -176,7 +177,7 @@ export default function UploadFilePage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                         d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
-                    <p className="text-sm text-zinc-500">Drop an HTML file here, or click to browse</p>
+                    <p className="text-sm text-zinc-500">Drop a file here, or click to browse</p>
                   </>
                 )}
               </label>
