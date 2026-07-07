@@ -5,7 +5,7 @@ import Sidebar from '@/components/layout/Sidebar'
 import NotificationBar from '@/components/layout/NotificationBar'
 import { Profile } from '@/types'
 
-async function getLatestFile(service: ReturnType<typeof createServiceClient>) {
+async function getLatestFile(service: any) {
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
   const { data } = await service
     .from('research_files')
