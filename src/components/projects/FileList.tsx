@@ -127,12 +127,23 @@ export default function FileList({ files: initialFiles, projectId, isAdmin, onDe
           </div>
 
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Link
-              href={`/projects/${projectId}/file/${file.id}`}
-              className="btn-ghost text-xs py-1 px-2"
-            >
-              Open
-            </Link>
+            {file.file_type === 'external_link' && file.external_url ? (
+              <a
+                href={file.external_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-ghost text-xs py-1 px-2"
+              >
+                Open ↗
+              </a>
+            ) : (
+              <Link
+                href={`/projects/${projectId}/file/${file.id}`}
+                className="btn-ghost text-xs py-1 px-2"
+              >
+                Open
+              </Link>
+            )}
             {isAdmin && (
               <button
                 onClick={() => handleDelete(file)}

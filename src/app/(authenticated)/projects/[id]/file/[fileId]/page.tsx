@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
@@ -67,9 +67,8 @@ export default async function FileViewerPage({ params }: PageProps) {
         fileUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(data.signedUrl)}`
       }
     }
-  } else if (file.file_type === 'external_link') {
-    viewMode = 'external'
-    fileUrl = file.external_url
+  } else if (file.file_type === 'external_link' && file.external_url) {
+    redirect(file.external_url)
   }
 
   const backHref = file.sub_project_id
@@ -124,12 +123,38 @@ export default async function FileViewerPage({ params }: PageProps) {
           title={file.name}
           sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-popups-to-escape-sandbox"
         />
-      ) : (viewMode === 'pdf' || viewMode === 'office' || viewMode === 'external') && fileUrl ? (
+      ) : (viewMode === 'pdf' || viewMode === 'office') && fileUrl ? (
         <iframe
           src={fileUrl}
           className="flex-1 w-full border-0"
           title={file.name}
         />
+      ) : viewMode === 'external' && fileUrl ? (
+        /* External links can't be iframed — most sites block embedding */
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 bg-zinc-50 p-8">
+          <div className="w-14 h-14 rounded-2xl bg-amber-100 flex items-center justify-center">
+            <svg className="w-7 h-7 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+          </div>
+          <div className="text-center max-w-sm">
+            <h2 className="text-base font-semibold text-zinc-900 mb-1">{file.name}</h2>
+            <p className="text-sm text-zinc-500 mb-6 break-all">{fileUrl}</p>
+            <a
+              href={fileUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary inline-flex items-center gap-2"
+            >
+              Open link
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+          </div>
+        </div>
       ) : (
         <div className="flex-1 flex items-center justify-center text-zinc-400 text-sm">
           Could not load file.
