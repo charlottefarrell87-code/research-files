@@ -1,4 +1,4 @@
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
@@ -11,7 +11,7 @@ export default async function FileViewerPage({ params }: PageProps) {
   const { id, fileId } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  // Auth check handled by layout — guests allowed if guest_access_enabled
 
   const service = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

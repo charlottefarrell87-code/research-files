@@ -1,5 +1,11 @@
 export type UserRole = 'admin' | 'viewer'
 
+export interface SiteSettings {
+  id: boolean
+  guest_access_enabled: boolean
+  updated_at: string
+}
+
 export interface Profile {
   id: string
   email: string

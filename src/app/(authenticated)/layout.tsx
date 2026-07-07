@@ -8,12 +8,35 @@ export default async function AuthenticatedLayout({ children }: { children: Reac
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) redirect('/login')
-
   const service = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
+
+  if (!user) {
+    // Check whether guest access is enabled before redirecting to login
+    const { data: settings } = await service
+      .from('site_settings')
+      .select('guest_access_enabled')
+      .single()
+
+    if (!settings?.guest_access_enabled) {
+      redirect('/login')
+    }
+
+    // Guest mode — render read-only with no profile
+    return (
+      <div className="flex min-h-screen">
+        <Sidebar profile={null} isGuest={true} />
+        <main className="flex-1 overflow-auto">
+          <div className="max-w-5xl mx-auto px-8 py-8">
+            {children}
+          </div>
+        </main>
+      </div>
+    )
+  }
+
   const { data: profile } = await service
     .from('profiles')
     .select('*')
@@ -22,7 +45,7 @@ export default async function AuthenticatedLayout({ children }: { children: Reac
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar profile={profile as Profile | null} />
+      <Sidebar profile={profile as Profile | null} isGuest={false} />
       <main className="flex-1 overflow-auto">
         <div className="max-w-5xl mx-auto px-8 py-8">
           {children}

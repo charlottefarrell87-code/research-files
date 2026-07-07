@@ -1,4 +1,4 @@
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { formatDate } from '@/lib/utils'
@@ -11,16 +11,17 @@ export default async function SubProjectPage({ params }: PageProps) {
   const { id, subId } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
 
-  const [{ data: profile }, { data: project }, { data: subProject }] = await Promise.all([
-    supabase.from('profiles').select('role').eq('id', user.id).single(),
+  const [profileResult, { data: project }, { data: subProject }] = await Promise.all([
+    user
+      ? supabase.from('profiles').select('role').eq('id', user.id).single()
+      : Promise.resolve({ data: null }),
     supabase.from('projects').select('id,name,color').eq('id', id).single(),
     supabase.from('sub_projects').select('*').eq('id', subId).single(),
   ])
 
   if (!project || !subProject) notFound()
-  const isAdmin = profile?.role === 'admin'
+  const isAdmin = profileResult.data?.role === 'admin'
 
   const [{ data: files }, { data: comments }] = await Promise.all([
     supabase.from('research_files').select('*').eq('sub_project_id', subId).order('created_at'),
@@ -84,7 +85,7 @@ export default async function SubProjectPage({ params }: PageProps) {
           <CommentSection
             comments={comments ?? []}
             subProjectId={subId}
-            currentUserId={user.id}
+            currentUserId={user?.id ?? null}
             isAdmin={isAdmin}
           />
         </section>

@@ -10,7 +10,7 @@ interface CommentSectionProps {
   comments: (Comment & { author: Pick<Profile, 'full_name' | 'email'> | null })[]
   projectId?: string
   subProjectId?: string
-  currentUserId: string
+  currentUserId: string | null
   isAdmin: boolean
 }
 
@@ -91,7 +91,7 @@ export default function CommentSection({
         )}
         {comments.map(c => {
           const name = c.author?.full_name ?? c.author?.email ?? 'Unknown'
-          const canModify = currentUserId === c.author_id || isAdmin
+          const canModify = currentUserId !== null && (currentUserId === c.author_id || isAdmin)
           return (
             <div key={c.id} className="flex gap-3">
               <div className="w-7 h-7 rounded-full bg-zinc-100 text-zinc-600 flex items-center justify-center text-xs font-semibold shrink-0 mt-0.5">
@@ -144,21 +144,29 @@ export default function CommentSection({
         })}
       </div>
 
-      {submitError && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-3">{submitError}</p>
+      {currentUserId ? (
+        <>
+          {submitError && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-3">{submitError}</p>
+          )}
+          <form onSubmit={handleSubmit} className="flex gap-3">
+            <textarea
+              className="input text-sm resize-none flex-1"
+              rows={2}
+              placeholder="Leave a comment…"
+              value={body}
+              onChange={e => setBody(e.target.value)}
+            />
+            <button type="submit" disabled={submitting || !body.trim()} className="btn-primary self-end">
+              Post
+            </button>
+          </form>
+        </>
+      ) : (
+        <p className="text-sm text-zinc-400 py-2">
+          <a href="/login" className="text-brand-600 hover:underline">Sign in</a> to leave a comment.
+        </p>
       )}
-      <form onSubmit={handleSubmit} className="flex gap-3">
-        <textarea
-          className="input text-sm resize-none flex-1"
-          rows={2}
-          placeholder="Leave a comment…"
-          value={body}
-          onChange={e => setBody(e.target.value)}
-        />
-        <button type="submit" disabled={submitting || !body.trim()} className="btn-primary self-end">
-          Post
-        </button>
-      </form>
     </div>
   )
 }
